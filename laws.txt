@@ -1,0 +1,91 @@
+#DOMESTIC_ISSUES_DEFINITION
+Domestic violence includes any act of physical, sexual, verbal, emotional, or economic abuse that harms a woman's health, safety, or well-being. This can be from any relative in a shared household and includes harassment for dowry.
+#END
+
+#DOMESTIC_ISSUES_LAWS
+1.  **The PWDV Act, 2005:** The main civil law that provides immediate relief to victims.
+2.  **Right to Residence:** A woman cannot be evicted from her marital home ("shared household").
+3.  **Protection Orders:** The court can stop the abuser from committing violence, contacting the woman, or entering her workplace.
+4.  **Monetary Relief:** A woman can claim maintenance and compensation for medical expenses and loss of earnings.
+5.  **Custody Orders:** The court can grant temporary custody of any child to the aggrieved person.
+6.  **Right to Free Legal Aid:** Every woman has the right to free legal services via the Legal Services Authorities Act.
+7.  **Section 498A (IPC):** Criminalizes cruelty by a husband or his relatives, punishable by up to three years in prison.
+8.  **Right to Stridhan:** A woman is the absolute owner of all gifts she receives during her marriage. It is a crime for her husband or in-laws to withhold it.
+9.  **Right to File a Zero FIR:** A woman can file an FIR at any police station, regardless of where the crime occurred.
+10. **Right to Medical Assistance:** A victim has the right to free medical aid from any government hospital.
+#END
+
+#WORKPLACE_ISSUES_DEFINITION
+Workplace harassment is any unwelcome act or behavior from anyone at the workplace (boss, client, coworker). This can be verbal, non-verbal, or physical, including sexual advances, showing pornography, or creating a hostile work environment.
+#END
+
+#WORKPLACE_ISSUES_LAWS
+1.  **The PoSH Act, 2013:** The primary law against sexual harassment at the workplace.
+2.  **Internal Committee (IC):** Any company with 10+ employees MUST have an IC. A woman can file a written complaint to the IC.
+3.  **Complaint Timeline:** A complaint must be filed within 3 months of the last incident.
+4.  **Employer's Duty:** Employers are required to conduct regular awareness programs and workshops about the PoSH Act.
+5.  **Equal Remuneration Act, 1976:** Mandates equal pay for men and women for the same or similar work. An employer cannot discriminate in recruitment or service conditions.
+6.  **Confidentiality:** The identity of the woman, the respondent, and the details of the complaint are to be kept confidential.
+#END
+
+#DOWRY_ISSUES_DEFINITION
+Dowry is any property, gift, or money given or agreed to be given in connection with a marriage. Demanding, giving, or taking dowry at any time (before, during, or after the marriage) is a serious crime.
+#END
+
+#DOWRY_ISSUES_LAWS
+1.  **The Dowry Prohibition Act, 1961:** The main law that makes demanding, giving, or taking dowry a crime.
+2.  **Punishment:** The penalty can be imprisonment for up to 5 years and a fine of Rs. 15,000 or the value of the dowry, whichever is more.
+3.  **Section 498A (IPC):** While a general cruelty law, it is most often used in cases of dowry harassment.
+4.  **Section 304B (IPC - Dowry Death):** If a woman dies unnaturally within seven years of marriage and was subjected to dowry-related cruelty, it is considered a "dowry death," and her husband/relatives face a minimum of seven years to life imprisonment.
+5.  **Protection Officer:** A victim of dowry harassment can also approach a Protection Officer, who is appointed under the PWDV Act.
+#END
+
+#PROPERTY_RIGHTS_DEFINITION
+This refers to the rights of a woman to inherit and own property. Modern laws ensure that women have significant rights to property, both from their parents and their husband.
+#END
+
+#PROPERTY_RIGHTS_LAWS
+1.  **Hindu Succession (Amendment) Act, 2005:** The most important law. It grants daughters equal rights to their father's ancestral property as sons.
+2.  **Coparcener by Birth:** A daughter is a co-owner of ancestral property from the moment she is born.
+3.  **Self-Acquired Property:** A father can will his self-acquired property to anyone he chooses. If he dies without a will, a daughter has an equal right to it as her mother, grandmother, and brother.
+4.  **Property from Husband:** A widow is entitled to an equal share of her deceased husband's property, along with his mother and children.
+5.  **Absolute Ownership:** A woman is the absolute owner of any property she acquires, inherits, or receives as a gift.
+#END
+
+#CYBERCRIME_ISSUES_DEFINITION
+Cybercrime against women includes any form of harassment, abuse, or threat using digital means like social media, email, or messaging apps. This includes stalking, blackmailing, morphing photos, and revenge porn.
+#END
+
+#CYBERCRIME_ISSUES_LAWS
+1.  **National Cyber Crime Helpline:** The official helpline number is 1930.
+2.  **Online Complaint Portal:** Complaints can be filed anonymously at www.cybercrime.gov.in.
+3.  **Section 354D (IPC - Stalking):** Monitoring a woman's online activity (social media, email) without her consent is a crime.
+4.  **Section 354C (IPC - Voyeurism):** Capturing or sharing private images of a woman without her consent is a crime.
+5.  **Section 509 (IPC):** Insulting the modesty of a woman through words, gestures, or objects (including online) is punishable.
+6.  **Section 66E (IT Act):** Punishes the violation of privacy by capturing or publishing images of a person's private areas without consent.
+#END
+
+#MATERNITY_BENEFITS_DEFINITION
+This refers to the legally mandated benefits and protections a working woman is entitled to from her employer during pregnancy and after childbirth.
+#END
+
+#MATERNITY_BENEFITS_LAWS
+1.  **Maternity Benefit Act, 2017:** The primary law governing maternity benefits.
+2.  **Paid Leave:** Entitles a woman to 26 weeks of paid leave for her first two children.
+3.  **Creche Facility:** Any company with 50 or more employees must provide a creche (childcare) facility.
+4.  **Work From Home:** After the 26-week leave, an employer may allow a woman to work from home if the nature of the work permits.
+5.  **Nursing Breaks:** A new mother is entitled to two nursing breaks during the day until the child is 15 months old.
+6.  **Protection Against Termination:** It is illegal for an employer to fire a woman because she is pregnant or on maternity leave.
+#END
+
+#RIGHT_TO_PRIVACY_DEFINITION
+This refers to a woman's fundamental right to privacy and dignity, especially during interactions with the police and the legal system.
+#END
+
+#RIGHT_TO_PRIVACY_LAWS
+1.  **Section 354C (IPC - Voyeurism):** It is a crime to capture or share images of a woman in a private act without her consent.
+2.  **No Arrest at Night:** A woman cannot be arrested after sunset or before sunrise, except in exceptional cases with a magistrate's order.
+3.  **Right to a Female Officer:** A woman has the right to be searched only by another female officer. A female police officer should be present during an arrest.
+4.  **Right to Not Be Handcuffed:** The Supreme Court has ruled that routine handcuffing is illegal. A person can only be handcuffed if there is a clear danger of them escaping or becoming violent.
+5.  **Right to Confidentiality:** The identity of a victim of sexual assault cannot be revealed to the public or media.
+#END
