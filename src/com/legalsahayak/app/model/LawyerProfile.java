@@ -20,7 +20,7 @@ public class LawyerProfile {
         return "  Name: " + name + "\n" +
                "  Specialization: " + specialization + "\n" +
                "  Experience Note: " + experience + "\n" +
-               "  Simulated Phone: " + phone + "\n" +
-               "  Simulated Email: " + email;
+               "  Phone Number: " + phone + "\n" +
+               "  Email: " + email;
     }
 }

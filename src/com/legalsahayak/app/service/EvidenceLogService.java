@@ -1,57 +1,59 @@
 package com.legalsahayak.app.service;
 
-import java.util.ArrayList;
-import java.util.Scanner;
+import com.legalsahayak.app.db.DatabaseService;
 import com.legalsahayak.app.model.LogEntry;
+import java.util.List;
+import java.util.Scanner;
 
 public class EvidenceLogService {
-    private final ArrayList<LogEntry> entries = new ArrayList<>();
+    
     private final Scanner scanner;
+    private final DatabaseService dbService;
 
-    public EvidenceLogService(Scanner scanner) {
+    public EvidenceLogService(Scanner scanner, DatabaseService dbService) {
         this.scanner = scanner;
+        this.dbService = dbService;
     }
 
-    public void addEntry() {
+    public void addEntry(String username) {
         System.out.println("\n--- Add New Log Entry ---");
         String category = getCategoryFromUser();
         System.out.print("Describe the incident/activity: ");
         String description = scanner.nextLine();
-        entries.add(new LogEntry(description, category));
-        System.out.println("✅ Entry saved successfully under '" + category + "'.");
-    }
-
-    public void viewEntries() {
-        System.out.println("\n--- View Log Entries ---");
-        if (entries.isEmpty()) {
-            System.out.println("Your log is currently empty.");
+        
+        if (description.isEmpty()) {
+            System.out.println("Description cannot be empty.");
             return;
         }
 
+        dbService.addLogEntry(username, description, category);
+        System.out.println("✅ Entry saved successfully.");
+    }
+
+    public void viewEntries(String username) {
+        System.out.println("\n--- View Log Entries ---");
         System.out.println("1. View All Entries");
         System.out.println("2. View by Category");
         System.out.print("Your choice: ");
         String choice = scanner.nextLine();
-
+        
+        List<LogEntry> entries;
         if (choice.equals("1")) {
-            printEntries(entries);
+            entries = dbService.getLogEntries(username, null); // null = all
         } else if (choice.equals("2")) {
             String category = getCategoryFromUser();
-            ArrayList<LogEntry> filteredEntries = new ArrayList<>();
-            for (LogEntry entry : entries) {
-                if (entry.getCategory().equals(category)) {
-                    filteredEntries.add(entry);
-                }
-            }
-            printEntries(filteredEntries);
+            entries = dbService.getLogEntries(username, category);
         } else {
             System.out.println("Invalid choice.");
+            return;
         }
+        
+        printEntries(entries);
     }
 
-    private void printEntries(ArrayList<LogEntry> entryList) {
+    private void printEntries(List<LogEntry> entryList) {
         if (entryList.isEmpty()) {
-            System.out.println("\nNo entries found for this category.");
+            System.out.println("\nNo entries found.");
             return;
         }
         System.out.println();
