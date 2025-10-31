@@ -1,8 +1,6 @@
 package com.legalsahayak.app.db;
 
-import com.legalsahayak.app.model.LawyerProfile;
-import com.legalsahayak.app.model.LogEntry;
-import com.legalsahayak.app.model.QuizCard;
+import com.legalsahayak.app.model.*; // Import all models
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -10,19 +8,11 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-/**
- * Handles all RUNTIME database operations.
- * Connects to the database and provides query methods for services.
- */
 public class DatabaseService {
 
     private Connection connection;
     private static final String DB_URL = "jdbc:sqlite:legalsahayak.db";
 
-    /**
-     * Connects to the SQLite database and enables foreign keys.
-     */
     public void connect() {
         try {
             Class.forName("org.sqlite.JDBC");
@@ -32,7 +22,7 @@ public class DatabaseService {
             }
             System.out.println("Database connection established.");
         } catch (Exception e) {
-            System.err.println("Error connecting to database: " + e.getMessage());
+            System.err.println("Error connecting: " + e.getMessage());
             System.exit(1);
         }
     }
@@ -52,23 +42,28 @@ public class DatabaseService {
         }
     }
 
-    public String getUserPasswordHash(String username) {
-        String sql = "SELECT password_hash FROM Users WHERE username = ?";
+    public Map<String, String> getLoginDetails(String username) {
+        String sql = "SELECT password_hash, role FROM Users WHERE username = ?";
+        Map<String, String> details = new LinkedHashMap<>();
         try (PreparedStatement p = connection.prepareStatement(sql)) {
             p.setString(1, username);
             try (ResultSet rs = p.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getString("password_hash");
+                    details.put("hash", rs.getString("password_hash"));
+                    details.put("role", rs.getString("role"));
+                    return details;
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error getting user hash: " + e.getMessage());
+            System.err.println("Error getting user details: " + e.getMessage());
         }
         return null; // User not found
     }
 
     public boolean registerUser(String username, String hashedPassword) {
-        String sql = "INSERT INTO Users(username, password_hash) VALUES(?, ?)";
+        // Inserts 'user' role by default
+        String sql = "INSERT INTO Users(username, password_hash, role) " +
+                     "VALUES(?, ?, 'user')";
         try (PreparedStatement p = connection.prepareStatement(sql)) {
             p.setString(1, username);
             p.setString(2, hashedPassword);
@@ -78,7 +73,6 @@ public class DatabaseService {
             System.err.println("Error registering user: " + e.getMessage());
             return false;
         }
-        
     }
 
     // --- Methods for UIHandler ---
@@ -107,10 +101,10 @@ public class DatabaseService {
         } catch (SQLException e) {
             System.err.println("Error fetching exit option: " + e.getMessage());
         }
-        return 7; // Default fallback
+        return 7; // Default fallback is now 7
     }
 
-    // --- Methods for RightsNavigatorService ---
+    // --- Methods for RightsNavigatorService & AdminService ---
 
     public Map<Integer, String> getLegalCategories() {
         Map<Integer, String> categories = new LinkedHashMap<>();
@@ -127,7 +121,8 @@ public class DatabaseService {
     }
 
     public String getLegalInfo(int categoryId, String infoType) {
-        String sql = "SELECT content FROM LegalInfo WHERE category_id = ? AND info_type = ?";
+        String sql = "SELECT content FROM LegalInfo " +
+                     "WHERE category_id = ? AND info_type = ?";
         try (PreparedStatement p = connection.prepareStatement(sql)) {
             p.setInt(1, categoryId);
             p.setString(2, infoType);
@@ -144,13 +139,15 @@ public class DatabaseService {
 
     public List<LawyerProfile> getLawyers(int categoryId) {
         List<LawyerProfile> lawyers = new ArrayList<>();
-        String sql = "SELECT * FROM Lawyers WHERE category_id = ?";
+        String sql = "SELECT id, name, specialization, experience, " + 
+                       "phone, email FROM Lawyers WHERE category_id = ?";
         try (PreparedStatement p = connection.prepareStatement(sql)) {
             p.setInt(1, categoryId);
             try (ResultSet rs = p.executeQuery()) {
                 while (rs.next()) {
                     lawyers.add(new LawyerProfile(
-                        rs.getString("name"), rs.getString("specialization"),
+                        rs.getInt("id"), rs.getString("name"),
+                        rs.getString("specialization"),
                         rs.getString("experience"), rs.getString("phone"),
                         rs.getString("email")
                     ));
@@ -160,6 +157,95 @@ public class DatabaseService {
             System.err.println("Error fetching lawyers: " + e.getMessage());
         }
         return lawyers;
+    }
+
+    // --- ADMIN CRUD ---
+
+    public boolean addLawyer(String name, String spec, String exp, 
+                             String ph, String mail, int catId) {
+        String sql = "INSERT INTO Lawyers(name, specialization, " + 
+                     "experience, phone, email, category_id) " + 
+                     "VALUES(?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement p = connection.prepareStatement(sql)) {
+            p.setString(1, name); p.setString(2, spec);
+            p.setString(3, exp); p.setString(4, ph);
+            p.setString(5, mail); p.setInt(6, catId);
+            p.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Error adding lawyer: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean updateLawyer(int lawyerId, String field, String value) {
+        String sql = "UPDATE Lawyers SET " + field + " = ? WHERE id = ?";
+        try (PreparedStatement p = connection.prepareStatement(sql)) {
+            p.setString(1, value);
+            p.setInt(2, lawyerId);
+            return p.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating lawyer: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean deleteLawyer(int lawyerId) {
+        String sql = "DELETE FROM Lawyers WHERE id = ?";
+        try (PreparedStatement p = connection.prepareStatement(sql)) {
+            p.setInt(1, lawyerId);
+            return p.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error deleting lawyer: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // NEW Admin method
+    public boolean updateLegalInfo(int catId, String type, String content) {
+        // This query tries to update, if it fails, it inserts.
+        String sql = "INSERT INTO LegalInfo (category_id, info_type, content) "
+                   + "VALUES (?, ?, ?) "
+                   + "ON CONFLICT(category_id, info_type) "
+                   + "DO UPDATE SET content = excluded.content";
+        try (PreparedStatement p = connection.prepareStatement(sql)) {
+            p.setInt(1, catId);
+            p.setString(2, type);
+            p.setString(3, content);
+            p.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Error updating legal info: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // NEW Admin method
+    public boolean addJargon(String term, String definition) {
+        // This query also updates if the term already exists.
+        String sql = "INSERT INTO Jargon (term, definition) VALUES (?, ?) "
+                   + "ON CONFLICT(term) DO UPDATE SET definition = excluded.definition";
+        try (PreparedStatement p = connection.prepareStatement(sql)) {
+            p.setString(1, term.toUpperCase());
+            p.setString(2, definition);
+            p.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Error adding jargon: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // NEW Admin method
+    public boolean deleteJargon(String term) {
+        String sql = "DELETE FROM Jargon WHERE term = ?";
+        try (PreparedStatement p = connection.prepareStatement(sql)) {
+            p.setString(1, term.toUpperCase());
+            return p.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error deleting jargon: " + e.getMessage());
+            return false;
+        }
     }
 
     // --- Methods for QuizService ---
@@ -181,12 +267,13 @@ public class DatabaseService {
                     questions.add(new QuizCard(
                         rs.getString("question"), options,
                         rs.getInt("correct_option_index"),
-                        rs.getString("explanation"), rs.getString("category_name")
+                        rs.getString("explanation"), 
+                        rs.getString("category_name")
                     ));
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error fetching quiz questions: " + e.getMessage());
+            System.err.println("Error fetching quiz: " + e.getMessage());
         }
         return questions;
     }
@@ -208,25 +295,26 @@ public class DatabaseService {
         return null;
     }
 
-    // --- Methods for EvidenceLogService ---
+    // --- USER EvidenceLog CRUD ---
 
-    public void addLogEntry(String username, String description, String category) {
-        String sql = "INSERT INTO EvidenceLog(username, timestamp, category, description) VALUES(?, ?, ?, ?)";
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+    public void addLogEntry(String user, String desc, String cat) {
+        String sql = "INSERT INTO EvidenceLog(username, timestamp, " +
+                     "category, description) VALUES(?, ?, ?, ?)";
+        String ts = LocalDateTime.now().format(
+                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         try (PreparedStatement p = connection.prepareStatement(sql)) {
-            p.setString(1, username);
-            p.setString(2, timestamp);
-            p.setString(3, category);
-            p.setString(4, description);
+            p.setString(1, user); p.setString(2, ts);
+            p.setString(3, cat); p.setString(4, desc);
             p.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Error saving log entry: " + e.getMessage());
+            System.err.println("Error saving log: " + e.getMessage());
         }
     }
 
     public List<LogEntry> getLogEntries(String username, String category) {
         List<LogEntry> entries = new ArrayList<>();
-        String sql = "SELECT timestamp, category, description FROM EvidenceLog WHERE username = ?";
+        String sql = "SELECT id, timestamp, category, description " + 
+                     "FROM EvidenceLog WHERE username = ?";
         
         if (category != null) {
             sql += " AND category = ?";
@@ -241,42 +329,64 @@ public class DatabaseService {
             try (ResultSet rs = p.executeQuery()) {
                 while (rs.next()) {
                     entries.add(new LogEntry(
-                        rs.getString("timestamp"),
+                        rs.getInt("id"), rs.getString("timestamp"),
                         rs.getString("description"),
                         rs.getString("category")
                     ));
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error fetching log entries: " + e.getMessage());
+            System.err.println("Error fetching logs: " + e.getMessage());
         }
         return entries;
     }
 
-    // --- Methods for RtiService ---
-
-    public void saveRTIRequest(String username, String authority, String info, 
-                               String name, String addr, String generatedText) {
-        String sql = """
-        INSERT INTO RTIRequests
-        (username, authority, info_needed, full_name, address, generated_text, status) 
-        VALUES(?, ?, ?, ?, ?, ?, 'Generated')
-        """;
+    public boolean updateLogEntry(int logId, String newDesc, String user) {
+        String sql = "UPDATE EvidenceLog SET description = ? " + 
+                     "WHERE id = ? AND username = ?";
         try (PreparedStatement p = connection.prepareStatement(sql)) {
-            p.setString(1, username);
-            p.setString(2, authority);
-            p.setString(3, info);
-            p.setString(4, name);
-            p.setString(5, addr);
-            p.setString(6, generatedText);
+            p.setString(1, newDesc);
+            p.setInt(2, logId);
+            p.setString(3, user);
+            return p.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating log: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean deleteLogEntry(int logId, String user) {
+        String sql = "DELETE FROM EvidenceLog WHERE id = ? AND username = ?";
+        try (PreparedStatement p = connection.prepareStatement(sql)) {
+            p.setInt(1, logId);
+            p.setString(2, user);
+            return p.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error deleting log: " + e.getMessage());
+            return false;
+        }
+    }
+
+    // --- USER RTIRequest CRUD ---
+
+    public void saveRTIRequest(String user, String auth, String info, 
+                               String name, String addr, String genText) {
+        String sql = "INSERT INTO RTIRequests(username, authority, " +
+                     "info_needed, full_name, address, generated_text, " +
+                     "status) VALUES(?, ?, ?, ?, ?, ?, 'Generated')";
+        try (PreparedStatement p = connection.prepareStatement(sql)) {
+            p.setString(1, user); p.setString(2, auth);
+            p.setString(3, info); p.setString(4, name);
+            p.setString(5, addr); p.setString(6, genText);
             p.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("Error saving RTI request: " + e.getMessage());
+            System.err.println("Error saving RTI: " + e.getMessage());
         }
     }
 
     public boolean displayUserRTIRequests(String username) {
-        String sql = "SELECT id, authority, status FROM RTIRequests WHERE username = ?";
+        String sql = "SELECT id, authority, status FROM RTIRequests " +
+                     "WHERE username = ?";
         boolean found = false;
         try (PreparedStatement p = connection.prepareStatement(sql)) {
             p.setString(1, username);
@@ -286,15 +396,13 @@ public class DatabaseService {
                         System.out.println("\n--- Your Saved RTI Requests ---");
                         found = true;
                     }
-                    System.out.println(
-                        "ID: " + rs.getInt("id") + 
+                    System.out.println("ID: " + rs.getInt("id") + 
                         " | To: " + rs.getString("authority") + 
-                        " | Status: " + rs.getString("status")
-                    );
+                        " | Status: " + rs.getString("status"));
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Error fetching RTI requests: " + e.getMessage());
+            System.err.println("Error fetching RTIs: " + e.getMessage());
         }
         if (!found) {
             System.out.println("You have no saved RTI requests.");
@@ -302,21 +410,34 @@ public class DatabaseService {
         return found;
     }
 
-    public void updateRTIStatus(int rtiId, String newStatus, String username) {
-        String sql = "UPDATE RTIRequests SET status = ? WHERE id = ? AND username = ?";
+    public void updateRTIStatus(int rtiId, String newStatus, String user) {
+        String sql = "UPDATE RTIRequests SET status = ? " +
+                     "WHERE id = ? AND username = ?";
         try (PreparedStatement p = connection.prepareStatement(sql)) {
             p.setString(1, newStatus);
             p.setInt(2, rtiId);
-            p.setString(3, username);
+            p.setString(3, user);
             
-            int rows = p.executeUpdate();
-            if (rows > 0) {
+            if (p.executeUpdate() > 0) {
                 System.out.println("Status updated successfully.");
             } else {
-                System.out.println("Error: Could not find an RTI with that ID belonging to you.");
+                System.out.println("Error: Could not find an RTI " + 
+                                   "with that ID belonging to you.");
             }
         } catch (SQLException e) {
             System.err.println("Error updating status: " + e.getMessage());
+        }
+    }
+    
+    public boolean deleteRTIRequest(int rtiId, String user) {
+        String sql = "DELETE FROM RTIRequests WHERE id = ? AND username = ?";
+        try (PreparedStatement p = connection.prepareStatement(sql)) {
+            p.setInt(1, rtiId);
+            p.setString(2, user);
+            return p.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error deleting RTI: " + e.getMessage());
+            return false;
         }
     }
 }

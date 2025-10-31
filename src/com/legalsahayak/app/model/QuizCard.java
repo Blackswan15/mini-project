@@ -1,23 +1,26 @@
 package com.legalsahayak.app.model;
 
+
 public class QuizCard {
     private final String question;
     private final String[] options;
-    private final int correctAnswerIndex;
+    private final int correctOptionIndex;
     private final String explanation;
-    private final String topic;
+    private final String category;
 
-    public QuizCard(String q, String[] o, int a, String e, String t) {
+    public QuizCard(String q, String[] opts, int correctIdx, 
+                    String exp, String cat) {
         this.question = q;
-        this.options = o;
-        this.correctAnswerIndex = a;
-        this.explanation = e;
-        this.topic = t;
+        this.options = opts;
+        this.correctOptionIndex = correctIdx;
+        this.explanation = exp;
+        this.category = cat;
     }
 
+    // Getters
     public String getQuestion() { return question; }
     public String[] getOptions() { return options; }
-    public int getCorrectAnswerIndex() { return correctAnswerIndex; }
+    public int getCorrectOptionIndex() { return correctOptionIndex; }
     public String getExplanation() { return explanation; }
-    public String getTopic() { return topic; }
+    public String getCategory() { return category; }
 }

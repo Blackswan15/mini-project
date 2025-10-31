@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Scanner;
 
 public class RightsNavigatorService {
-    
     private final Scanner scanner;
     private final DatabaseService dbService;
 
@@ -17,57 +16,60 @@ public class RightsNavigatorService {
     }
 
     public void start() {
-        System.out.println("\n--- ⚖️ Legal Rights Navigator ---");
-        System.out.println("Select a category to learn more:");
+        System.out.println("\n--- Rights Navigator ---");
+        System.out.println("Select a legal category to learn about:");
         
         Map<Integer, String> categories = dbService.getLegalCategories();
-        if (categories.isEmpty()) {
-            System.out.println("No legal categories found.");
-            return;
-        }
-        
         categories.forEach((id, name) -> System.out.println(id + ". " + name));
-        System.out.print("Your choice: ");
         
+        System.out.print("Enter category ID: ");
+        int catId = -1;
         try {
-            int choice = Integer.parseInt(scanner.nextLine());
-            String categoryName = categories.get(choice);
-            
-            if (categoryName == null) {
-                System.out.println("Invalid category.");
+            catId = Integer.parseInt(scanner.nextLine());
+            if (!categories.containsKey(catId)) {
+                System.out.println("Invalid category ID.");
                 return;
             }
-            
-            String definition = dbService.getLegalInfo(choice, "DEFINITION");
-            System.out.println("\n--- Definition ---\n" + definition);
-
-            System.out.print("\nSee relevant laws? (y/n): ");
-            if (scanner.nextLine().equalsIgnoreCase("y")) {
-                String laws = dbService.getLegalInfo(choice, "LAWS");
-                System.out.println("\n--- Relevant Laws ---\n" + laws);
-
-                System.out.print("\nFind a lawyer? (y/n): ");
-                if (scanner.nextLine().equalsIgnoreCase("y")) {
-                    displayLawyerProfile(choice, categoryName);
-                }
-            }
         } catch (NumberFormatException e) {
-            System.out.println("Invalid input. Please enter a number.");
+            System.out.println("Invalid input.");
+            return;
+        }
+
+        boolean running = true;
+        while (running) {
+            System.out.println("\nSelect information for " + 
+                               categories.get(catId) + ":");
+            System.out.println("1. Summary");
+            System.out.println("2. Key Rights");
+            System.out.println("3. Find Lawyers");
+            System.out.println("4. Back to Main Menu");
+            System.out.print("Enter choice: ");
+            
+            switch (scanner.nextLine()) {
+                case "1": 
+                    System.out.println(dbService.getLegalInfo(catId, "summary"));
+                    break;
+                case "2":
+                    System.out.println(dbService.getLegalInfo(catId, "key_rights"));
+                    break;
+                case "3":
+                    displayLawyers(catId);
+                    break;
+                case "4":
+                    running = false;
+                    break;
+                default: System.out.println("Invalid choice.");
+            }
         }
     }
 
-    private void displayLawyerProfile(int categoryId, String categoryName) {
-        System.out.println("\n--- Lawyers for: " + categoryName + " ---");
-        List<LawyerProfile> lawyers = dbService.getLawyers(categoryId);
-        
+    private void displayLawyers(int catId) {
+        List<LawyerProfile> lawyers = dbService.getLawyers(catId);
         if (lawyers.isEmpty()) {
-            System.out.println("No specialized lawyers found.");
-        } else {
-            for (LawyerProfile lawyer : lawyers) {
-                System.out.println("----------------------------------------");
-                System.out.println(lawyer.toString());
-            }
+            System.out.println("No lawyers found for this category.");
+            return;
         }
-        System.out.println("----------------------------------------");
+        System.out.println("\n--- Lawyers ---");
+        lawyers.forEach(System.out::println);
     }
 }

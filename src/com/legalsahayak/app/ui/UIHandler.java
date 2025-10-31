@@ -23,8 +23,11 @@ public class UIHandler {
     public static void displayMainMenu(DatabaseService dbService) {
         System.out.println("\n--- Main Menu ---");
         
+        // Uses a Map (a key-value data structure) 
+        // to dynamically build the menu from the DB
         Map<Integer, String> menuItems = dbService.getMainMenu();
         
+        // Loop through the Map's entries
         for (Map.Entry<Integer, String> entry : menuItems.entrySet()) {
             System.out.println(entry.getKey() + ". " + entry.getValue());
         }

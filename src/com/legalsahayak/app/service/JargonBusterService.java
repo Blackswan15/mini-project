@@ -4,7 +4,6 @@ import com.legalsahayak.app.db.DatabaseService;
 import java.util.Scanner;
 
 public class JargonBusterService {
-    
     private final Scanner scanner;
     private final DatabaseService dbService;
 
@@ -13,23 +12,25 @@ public class JargonBusterService {
         this.dbService = dbService;
     }
 
+    /**
+     * Simple service to look up terms in the local database.
+     */
     public void start() {
-        System.out.println("\n--- 📖 Legal Jargon Buster ---");
-        System.out.print("Enter a legal term (e.g., FIR): ");
+        System.out.println("\n--- Jargon Buster ---");
+        System.out.print("Enter a legal term (or 'exit' to quit): ");
         String term = scanner.nextLine();
-
-        if (term.isEmpty()) {
-            System.out.println("No term entered.");
-            return;
-        }
-
-        String definition = dbService.getJargonDefinition(term);
         
-        if (definition != null) {
-            System.out.println("\nDefinition of " + term.toUpperCase() + ":");
-            System.out.println(definition);
+        if (term.equalsIgnoreCase("exit")) return;
+
+        // Search the local database
+        // The term is converted to uppercase in the DB service
+        String def = dbService.getJargonDefinition(term);
+        
+        if (def != null) {
+            System.out.println("\nDefinition:\n" + def);
         } else {
-            System.out.println("Sorry, that term was not found.");
+            System.out.println("Term not found in our database.");
+            System.out.println("Admins can add new terms to the database.");
         }
     }
 }

@@ -12,81 +12,99 @@ public class RtiService {
         this.dbService = dbService;
     }
 
+   
     public void start(String username) {
-        boolean isRunning = true;
-        while (isRunning) {
-            System.out.println("\n---  RTI Request Manager ---");
-            System.out.println("1. Generate New RTI Request");
-            System.out.println("2. View My RTI Requests");
-            System.out.println("3. Update RTI Status");
-            System.out.println("4. Back to Main Menu");
-            System.out.print("Your choice: ");
+        boolean running = true;
+        while (running) {
+            System.out.println("\n--- RTI Service Menu ---");
+            System.out.println("1. Generate New RTI Request (Create)");
+            System.out.println("2. View My RTI Requests (Read)");
+            System.out.println("3. Update RTI Status (Update)");
+            System.out.println("4. Delete an RTI Request (Delete)");
+            System.out.println("5. Back to Main Menu");
+            System.out.print("Enter choice: ");
             
             switch (scanner.nextLine()) {
-                case "1": generateNewRTI(username); break;
+                case "1": generateRTI(username); break;
                 case "2": dbService.displayUserRTIRequests(username); break;
                 case "3": updateStatus(username); break;
-                case "4": isRunning = false; break;
+                case "4": deleteRequest(username); break;
+                case "5": running = false; break;
                 default: System.out.println("Invalid choice.");
             }
         }
     }
 
-    private void generateNewRTI(String username) {
-        System.out.println("\n--- New RTI Request Generator ---");
-        String authority = getUserInput("[1] Public Authority (e.g., Municipal Corp): ");
-        String infoNeeded = getUserInput("[2] Specific information needed: ");
-        String fullName = getUserInput("[3] Your full name: ");
-        String address = getUserInput("[4] Your full address: ");
+    // CREATE
+    private void generateRTI(String username) {
+        System.out.println("--- New RTI Application ---");
+        System.out.print("Enter your Full Name: ");
+        String name = scanner.nextLine();
+        System.out.print("Enter your Full Address: ");
+        String addr = scanner.nextLine();
+        System.out.print("Enter Public Authority (e.g., 'Municipal Corp'): ");
+        String auth = scanner.nextLine();
+        System.out.print("Enter Information Needed: ");
+        String info = scanner.nextLine();
 
-        String rtiText = generateRtiText(authority, infoNeeded, fullName, address);
-        dbService.saveRTIRequest(username, authority, infoNeeded, fullName, address, rtiText);
-
-        System.out.println("\n--- RTI Application Saved! ---");
+        // Simple text generation
+        String rtiText = String.format(
+            "To: The Public Information Officer\n%s\n\n" +
+            "Subject: Request for Information under RTI Act 2005\n\n" +
+            "Applicant: %s\nAddress: %s\n\n" +
+            "Details of Information Required:\n%s\n\n" +
+            "Please provide this information as per the RTI Act.",
+            auth, name, addr, info
+        );
+        
+        System.out.println("\n--- Generated RTI Text ---");
         System.out.println(rtiText);
+        System.out.println("--------------------------");
+        System.out.print("Save this request to your records? (y/n): ");
+
+        if (scanner.nextLine().equalsIgnoreCase("y")) {
+            dbService.saveRTIRequest(username, auth, info, name, 
+                                     addr, rtiText);
+            System.out.println("RTI request saved.");
+        }
     }
 
+    // UPDATE
     private void updateStatus(String username) {
-        System.out.println("\n--- Update RTI Status ---");
+        System.out.print("Enter the ID of the RTI request to update: ");
         if (!dbService.displayUserRTIRequests(username)) {
-            return; // Don't proceed if there are no RTIs
+            return; // No requests to update
         }
-        
-        System.out.print("Enter the ID of the RTI to update: ");
-        int rtiId = -1;
+
         try {
-            rtiId = Integer.parseInt(scanner.nextLine());
+            int rtiId = Integer.parseInt(scanner.nextLine());
+            System.out.print("Enter new status (e.g., 'Filed', 'Replied'): ");
+            String status = scanner.nextLine();
+            dbService.updateRTIStatus(rtiId, status, username);
         } catch (NumberFormatException e) {
             System.out.println("Invalid ID.");
-            return;
         }
+    }
 
-        System.out.print("Enter new status (e.g., 'Submitted', 'Replied'): ");
-        String newStatus = scanner.nextLine();
-        if (newStatus.isEmpty()) {
-            System.out.println("Status cannot be empty.");
-            return;
+    // DELETE
+    private void deleteRequest(String username) {
+        System.out.print("Enter the ID of the RTI request to delete: ");
+        if (!dbService.displayUserRTIRequests(username)) {
+            return; // No requests to delete
         }
         
-        dbService.updateRTIStatus(rtiId, newStatus, username);
-    }
-
-    private String getUserInput(String prompt) {
-        System.out.println(prompt);
-        System.out.print("> ");
-        return scanner.nextLine();
-    }
-
-    private String generateRtiText(String auth, String info, String name, String addr) {
-        return String.format(
-            "----------------------------------------------------\n" +
-            "To,\nThe Public Information Officer (PIO),\n%s\n\n" +
-            "Subject: Request for Information under RTI Act, 2005\n\n" +
-            "Sir/Madam,\nI, %s, residing at %s, seek the following info:\n" +
-            "1. %s\n\n" +
-            "Sincerely,\n%s\n" +
-            "----------------------------------------------------\n",
-            auth, name, addr, info, name
-        );
+        try {
+            int rtiId = Integer.parseInt(scanner.nextLine());
+            System.out.print("Are you sure? This cannot be undone. (y/n): ");
+            if (scanner.nextLine().equalsIgnoreCase("y")) {
+                if (dbService.deleteRTIRequest(rtiId, username)) {
+                    System.out.println("RTI Request deleted.");
+                } else {
+                    System.out.println("Error: Could not find request.");
+                }
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid ID.");
+        }
     }
 }

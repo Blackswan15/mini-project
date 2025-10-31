@@ -2,16 +2,12 @@ package com.legalsahayak.app.service;
 
 import com.legalsahayak.app.db.DatabaseService;
 import com.legalsahayak.app.model.QuizCard;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
-import java.util.Set;
 
 public class QuizService {
-    
     private final Scanner scanner;
     private final DatabaseService dbService;
-    private static final int QUESTIONS_IN_QUIZ = 5;
 
     public QuizService(Scanner scanner, DatabaseService dbService) {
         this.scanner = scanner;
@@ -19,59 +15,37 @@ public class QuizService {
     }
 
     public void start() {
-        System.out.println("\n--- 🤔 Legal Assessment Quiz ---");
-        List<QuizCard> quizSelection = dbService.getQuizQuestions(QUESTIONS_IN_QUIZ);
-
-        if (quizSelection.isEmpty()) {
-            System.out.println("Could not load quiz questions.");
-            return;
-        }
-        
+        System.out.println("\n--- Legal Rights Quiz ---");
+        List<QuizCard> questions = dbService.getQuizQuestions(5); // Get 5
         int score = 0;
-        Set<String> topicsToReview = new HashSet<>();
 
-        for (int i = 0; i < quizSelection.size(); i++) {
-            QuizCard card = quizSelection.get(i);
-            System.out.println("\nQuestion " + (i + 1) + ": " + card.getQuestion());
+        for (QuizCard card : questions) {
+            System.out.println("\nCategory: " + card.getCategory());
+            System.out.println("Q: " + card.getQuestion());
             
             String[] options = card.getOptions();
-            for (int j = 0; j < options.length; j++) {
-                System.out.println((j + 1) + ". " + options[j]);
+            for (int i = 0; i < options.length; i++) {
+                System.out.println((i + 1) + ". " + options[i]);
             }
             
-            int answer = getUserAnswer();
-            if (answer - 1 == card.getCorrectAnswerIndex()) {
-                System.out.println("✅ Correct!");
+            System.out.print("Enter your answer (1-" + options.length + "): ");
+            int userAnswer = -1;
+            try {
+                userAnswer = Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                // Handle invalid number input
+            }
+            
+            if (userAnswer == card.getCorrectOptionIndex()) {
+                System.out.println("Correct!");
                 score++;
             } else {
-                System.out.println("❌ Incorrect.");
-                topicsToReview.add(card.getTopic());
+                System.out.println("Incorrect.");
             }
-            System.out.println(card.getExplanation());
+            System.out.println("Explanation: " + card.getExplanation());
         }
-        displayResults(score, topicsToReview);
-    }
-
-    private int getUserAnswer() {
-        System.out.print("Your answer: ");
-        try {
-            return Integer.parseInt(scanner.nextLine());
-        } catch (NumberFormatException e) {
-            return -1; // Invalid answer
-        }
-    }
-
-    private void displayResults(int score, Set<String> topics) {
-        System.out.println("\n--- Quiz Complete! ---");
-        System.out.println("Your final score: " + score + " out of " + QUESTIONS_IN_QUIZ);
-
-        if (score == QUESTIONS_IN_QUIZ) {
-            System.out.println("Excellent work! You have a strong understanding.");
-        } else if (!topics.isEmpty()) {
-            System.out.println("\nTopics to review in the 'Rights Navigator':");
-            for (String topic : topics) {
-                System.out.println("- " + topic);
-            }
-        }
+        
+        System.out.println("\n--- Quiz Finished ---");
+        System.out.println("Your score: " + score + " / " + questions.size());
     }
 }
