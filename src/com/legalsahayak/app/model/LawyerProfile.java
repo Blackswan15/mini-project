@@ -1,7 +1,7 @@
 package com.legalsahayak.app.model;
 
 public class LawyerProfile {
-    private final int id; // Added for CRUD
+    private final int id; 
     private final String name;
     private final String specialization;
     private final String experience;

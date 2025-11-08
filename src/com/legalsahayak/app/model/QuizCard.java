@@ -17,7 +17,6 @@ public class QuizCard {
         this.category = cat;
     }
 
-    // Getters
     public String getQuestion() { return question; }
     public String[] getOptions() { return options; }
     public int getCorrectOptionIndex() { return correctOptionIndex; }

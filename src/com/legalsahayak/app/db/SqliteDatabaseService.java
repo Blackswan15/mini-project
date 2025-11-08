@@ -1,6 +1,6 @@
 package com.legalsahayak.app.db;
 
-import com.legalsahayak.app.model.*; // Import all models
+import com.legalsahayak.app.model.*;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -8,12 +8,14 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-public class DatabaseService {
+
+public class SqliteDatabaseService implements IDatabaseService {
 
     private Connection connection;
     private static final String DB_URL = "jdbc:sqlite:legalsahayak.db";
 
-    public void connect() {
+    @Override
+    public void connect() throws SQLException {
         try {
             Class.forName("org.sqlite.JDBC");
             connection = DriverManager.getConnection(DB_URL);
@@ -23,18 +25,17 @@ public class DatabaseService {
             System.out.println("Database connection established.");
         } catch (Exception e) {
             System.err.println("Error connecting: " + e.getMessage());
-            System.exit(1);
+            throw new SQLException("Error connecting to database: " + e.getMessage());
         }
     }
 
-    // --- Methods for AuthService ---
-
+    @Override
     public boolean doesUserExist(String username) {
         String sql = "SELECT 1 FROM Users WHERE username = ?";
         try (PreparedStatement p = connection.prepareStatement(sql)) {
             p.setString(1, username);
             try (ResultSet rs = p.executeQuery()) {
-                return rs.next(); // True if user exists
+                return rs.next(); 
             }
         } catch (SQLException e) {
             System.err.println("Error checking user: " + e.getMessage());
@@ -42,6 +43,7 @@ public class DatabaseService {
         }
     }
 
+    @Override
     public Map<String, String> getLoginDetails(String username) {
         String sql = "SELECT password_hash, role FROM Users WHERE username = ?";
         Map<String, String> details = new LinkedHashMap<>();
@@ -57,11 +59,11 @@ public class DatabaseService {
         } catch (SQLException e) {
             System.err.println("Error getting user details: " + e.getMessage());
         }
-        return null; // User not found
+        return null; 
     }
 
+    @Override
     public boolean registerUser(String username, String hashedPassword) {
-        // Inserts 'user' role by default
         String sql = "INSERT INTO Users(username, password_hash, role) " +
                      "VALUES(?, ?, 'user')";
         try (PreparedStatement p = connection.prepareStatement(sql)) {
@@ -75,8 +77,8 @@ public class DatabaseService {
         }
     }
 
-    // --- Methods for UIHandler ---
 
+    @Override
     public Map<Integer, String> getMainMenu() {
         Map<Integer, String> menu = new LinkedHashMap<>();
         String sql = "SELECT id, option_text FROM MainMenu ORDER BY id";
@@ -91,6 +93,7 @@ public class DatabaseService {
         return menu;
     }
     
+    @Override
     public int getExitOptionId() {
         String sql = "SELECT id FROM MainMenu WHERE option_text = 'Exit'";
         try (Statement stmt = connection.createStatement();
@@ -104,8 +107,7 @@ public class DatabaseService {
         return 7; // Default fallback is now 7
     }
 
-    // --- Methods for RightsNavigatorService & AdminService ---
-
+    @Override
     public Map<Integer, String> getLegalCategories() {
         Map<Integer, String> categories = new LinkedHashMap<>();
         String sql = "SELECT id, category_name FROM LegalCategories ORDER BY id";
@@ -120,6 +122,7 @@ public class DatabaseService {
         return categories;
     }
 
+    @Override
     public String getLegalInfo(int categoryId, String infoType) {
         String sql = "SELECT content FROM LegalInfo " +
                      "WHERE category_id = ? AND info_type = ?";
@@ -137,6 +140,7 @@ public class DatabaseService {
         return "Content not found.";
     }
 
+    @Override
     public List<LawyerProfile> getLawyers(int categoryId) {
         List<LawyerProfile> lawyers = new ArrayList<>();
         String sql = "SELECT id, name, specialization, experience, " + 
@@ -159,8 +163,7 @@ public class DatabaseService {
         return lawyers;
     }
 
-    // --- ADMIN CRUD ---
-
+    @Override
     public boolean addLawyer(String name, String spec, String exp, 
                              String ph, String mail, int catId) {
         String sql = "INSERT INTO Lawyers(name, specialization, " + 
@@ -178,7 +181,12 @@ public class DatabaseService {
         }
     }
 
+    @Override
     public boolean updateLawyer(int lawyerId, String field, String value) {
+        if (!field.equals("phone") && !field.equals("email") && !field.equals("specialization") && !field.equals("experience") && !field.equals("name")) {
+            System.err.println("Invalid update field.");
+            return false;
+        }
         String sql = "UPDATE Lawyers SET " + field + " = ? WHERE id = ?";
         try (PreparedStatement p = connection.prepareStatement(sql)) {
             p.setString(1, value);
@@ -190,6 +198,7 @@ public class DatabaseService {
         }
     }
 
+    @Override
     public boolean deleteLawyer(int lawyerId) {
         String sql = "DELETE FROM Lawyers WHERE id = ?";
         try (PreparedStatement p = connection.prepareStatement(sql)) {
@@ -201,9 +210,8 @@ public class DatabaseService {
         }
     }
 
-    // NEW Admin method
+    @Override
     public boolean updateLegalInfo(int catId, String type, String content) {
-        // This query tries to update, if it fails, it inserts.
         String sql = "INSERT INTO LegalInfo (category_id, info_type, content) "
                    + "VALUES (?, ?, ?) "
                    + "ON CONFLICT(category_id, info_type) "
@@ -220,9 +228,8 @@ public class DatabaseService {
         }
     }
 
-    // NEW Admin method
+    @Override
     public boolean addJargon(String term, String definition) {
-        // This query also updates if the term already exists.
         String sql = "INSERT INTO Jargon (term, definition) VALUES (?, ?) "
                    + "ON CONFLICT(term) DO UPDATE SET definition = excluded.definition";
         try (PreparedStatement p = connection.prepareStatement(sql)) {
@@ -236,7 +243,7 @@ public class DatabaseService {
         }
     }
 
-    // NEW Admin method
+    @Override
     public boolean deleteJargon(String term) {
         String sql = "DELETE FROM Jargon WHERE term = ?";
         try (PreparedStatement p = connection.prepareStatement(sql)) {
@@ -248,8 +255,8 @@ public class DatabaseService {
         }
     }
 
-    // --- Methods for QuizService ---
 
+    @Override
     public List<QuizCard> getQuizQuestions(int limit) {
         List<QuizCard> questions = new ArrayList<>();
         String sql = """
@@ -278,8 +285,7 @@ public class DatabaseService {
         return questions;
     }
 
-    // --- Methods for JargonBusterService ---
-
+    @Override
     public String getJargonDefinition(String term) {
         String sql = "SELECT definition FROM Jargon WHERE term = ?";
         try (PreparedStatement p = connection.prepareStatement(sql)) {
@@ -295,8 +301,7 @@ public class DatabaseService {
         return null;
     }
 
-    // --- USER EvidenceLog CRUD ---
-
+    @Override
     public void addLogEntry(String user, String desc, String cat) {
         String sql = "INSERT INTO EvidenceLog(username, timestamp, " +
                      "category, description) VALUES(?, ?, ?, ?)";
@@ -310,20 +315,26 @@ public class DatabaseService {
             System.err.println("Error saving log: " + e.getMessage());
         }
     }
+    
+    @Override
+    public List<LogEntry> getLogEntries(String username) {
+        return getLogEntries(username, null); // Calls the other method
+    }
 
+    @Override
     public List<LogEntry> getLogEntries(String username, String category) {
         List<LogEntry> entries = new ArrayList<>();
         String sql = "SELECT id, timestamp, category, description " + 
                      "FROM EvidenceLog WHERE username = ?";
         
-        if (category != null) {
+        if (category != null && !category.isBlank()) {
             sql += " AND category = ?";
         }
         sql += " ORDER BY timestamp DESC";
 
         try (PreparedStatement p = connection.prepareStatement(sql)) {
             p.setString(1, username);
-            if (category != null) {
+            if (category != null && !category.isBlank()) {
                 p.setString(2, category);
             }
             try (ResultSet rs = p.executeQuery()) {
@@ -341,6 +352,7 @@ public class DatabaseService {
         return entries;
     }
 
+    @Override
     public boolean updateLogEntry(int logId, String newDesc, String user) {
         String sql = "UPDATE EvidenceLog SET description = ? " + 
                      "WHERE id = ? AND username = ?";
@@ -355,6 +367,7 @@ public class DatabaseService {
         }
     }
 
+    @Override
     public boolean deleteLogEntry(int logId, String user) {
         String sql = "DELETE FROM EvidenceLog WHERE id = ? AND username = ?";
         try (PreparedStatement p = connection.prepareStatement(sql)) {
@@ -366,9 +379,7 @@ public class DatabaseService {
             return false;
         }
     }
-
-    // --- USER RTIRequest CRUD ---
-
+    @Override
     public void saveRTIRequest(String user, String auth, String info, 
                                String name, String addr, String genText) {
         String sql = "INSERT INTO RTIRequests(username, authority, " +
@@ -384,51 +395,44 @@ public class DatabaseService {
         }
     }
 
-    public boolean displayUserRTIRequests(String username) {
+    @Override
+    public List<Map<String, String>> getUserRTIRequests(String username) {
         String sql = "SELECT id, authority, status FROM RTIRequests " +
                      "WHERE username = ?";
-        boolean found = false;
+        List<Map<String, String>> requests = new ArrayList<>();
         try (PreparedStatement p = connection.prepareStatement(sql)) {
             p.setString(1, username);
             try (ResultSet rs = p.executeQuery()) {
                 while (rs.next()) {
-                    if (!found) {
-                        System.out.println("\n--- Your Saved RTI Requests ---");
-                        found = true;
-                    }
-                    System.out.println("ID: " + rs.getInt("id") + 
-                        " | To: " + rs.getString("authority") + 
-                        " | Status: " + rs.getString("status"));
+                    Map<String, String> request = new LinkedHashMap<>();
+                    request.put("id", String.valueOf(rs.getInt("id"))); // As string for table
+                    request.put("authority", rs.getString("authority"));
+                    request.put("status", rs.getString("status"));
+                    requests.add(request);
                 }
             }
         } catch (SQLException e) {
             System.err.println("Error fetching RTIs: " + e.getMessage());
         }
-        if (!found) {
-            System.out.println("You have no saved RTI requests.");
-        }
-        return found;
+        return requests;
     }
 
-    public void updateRTIStatus(int rtiId, String newStatus, String user) {
+    @Override
+    public boolean updateRTIStatus(int rtiId, String newStatus, String user) {
         String sql = "UPDATE RTIRequests SET status = ? " +
                      "WHERE id = ? AND username = ?";
         try (PreparedStatement p = connection.prepareStatement(sql)) {
             p.setString(1, newStatus);
             p.setInt(2, rtiId);
             p.setString(3, user);
-            
-            if (p.executeUpdate() > 0) {
-                System.out.println("Status updated successfully.");
-            } else {
-                System.out.println("Error: Could not find an RTI " + 
-                                   "with that ID belonging to you.");
-            }
+            return p.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("Error updating status: " + e.getMessage());
+            return false;
         }
     }
     
+    @Override
     public boolean deleteRTIRequest(int rtiId, String user) {
         String sql = "DELETE FROM RTIRequests WHERE id = ? AND username = ?";
         try (PreparedStatement p = connection.prepareStatement(sql)) {

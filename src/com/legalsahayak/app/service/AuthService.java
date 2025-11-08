@@ -1,69 +1,46 @@
 package com.legalsahayak.app.service;
 
-import com.legalsahayak.app.db.DatabaseService;
-import com.legalsahayak.app.model.UserSession; // Import new model
-import java.util.Map; // Using Map data structure
-import java.util.Scanner;
+import com.legalsahayak.app.db.IDatabaseService;
+import com.legalsahayak.app.model.UserSession;
+import java.util.Map;
 import org.mindrot.jbcrypt.BCrypt;
 
 public class AuthService {
-    private final Scanner scanner;
-    private final DatabaseService dbService;
-
-    public AuthService(Scanner scanner, DatabaseService dbService) {
-        this.scanner = scanner;
+    private final IDatabaseService dbService;
+    public AuthService(IDatabaseService dbService) {
         this.dbService = dbService;
     }
 
-    /**
-     * Handles user login.
-     * @return A UserSession object if login is successful, null otherwise.
-     */
-    public UserSession login() {
-        System.out.println("\n--- Login ---");
-        System.out.print("Enter username: ");
-        String username = scanner.nextLine();
-        
+    public UserSession login(String username, String password) throws AuthException {
         Map<String, String> details = dbService.getLoginDetails(username);
 
         if (details == null) {
-            System.out.println("Error: User not found.");
-            return null;
+            throw new AuthException("Error: User not found.");
         }
 
-        System.out.print("Enter password: ");
-        String password = scanner.nextLine();
-
         if (BCrypt.checkpw(password, details.get("hash"))) {
-            System.out.println("Login successful.");
             return new UserSession(username, details.get("role"));
         } else {
-            System.out.println("Error: Invalid password.");
-            return null;
+            throw new AuthException("Error: Invalid password.");
         }
     }
     
-   
-    public void register() {
-        System.out.println("\n--- Register ---");
-        System.out.print("Enter new username: ");
-        String username = scanner.nextLine();
-
+ 
+    public void register(String username, String password) throws AuthException {
         if (dbService.doesUserExist(username)) {
-            System.out.println("Error: Username already exists.");
-            return;
+            throw new AuthException("Error: Username already exists.");
         }
 
-        System.out.print("Enter new password: ");
-        String password = scanner.nextLine();
-        
-        // Hash the password for security
         String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
         
-        if (dbService.registerUser(username, hashedPassword)) {
-            System.out.println("Registration successful. Please login.");
-        } else {
-            System.out.println("Error: Registration failed.");
+        if (!dbService.registerUser(username, hashedPassword)) {
+            throw new AuthException("Error: Registration failed due to a database error.");
+        }
+    }
+
+    public static class AuthException extends Exception {
+        public AuthException(String message) {
+            super(message);
         }
     }
 }

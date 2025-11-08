@@ -1,7 +1,7 @@
 package com.legalsahayak.app.model;
 
 public class LogEntry {
-    private final int id; // Added for CRUD
+    private final int id; 
     private final String timestamp;
     private final String description;
     private final String category;
@@ -15,6 +15,18 @@ public class LogEntry {
 
     public int getId() {
         return id;
+    }
+
+    public String getTimestamp() {
+        return timestamp;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public String getCategory() {
+        return category;
     }
 
     @Override

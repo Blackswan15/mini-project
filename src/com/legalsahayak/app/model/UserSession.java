@@ -16,12 +16,11 @@ public class UserSession {
     public String getRole() {
         return role;
     }
-    
-    /**
-     * A helper method to easily check if the user is an admin.
-     * @return true if the user's role is 'admin', false otherwise.
-     */
-    public boolean isAdmin() {
-        return "admin".equalsIgnoreCase(role);
+   
+     public boolean isAdmin() {
+        if (this.role == null) {
+            return false;
+        }
+        return "admin".equalsIgnoreCase(this.role);
     }
 }
